@@ -8,34 +8,44 @@ import common.*;
 public class ClientCommand extends AbstractClient {
 	
 	Display clientUI; 
-	String purchaseNum;
-	String Name;
-	public ClientCommand(String host, int port,String purchase,Display clientUI) throws IOException {
+	String userName = null;
+	String purchaseNum = null;
+	String command = null;
+	
+	public ClientCommand(String host, int port,Display clientUI) throws IOException {
 		super(host, port);
 		this.clientUI = clientUI;
-		this.purchaseNum = purchase;
 		openConnection();
 	}
 
 	public void handleMessageFromClientUI(String message) throws IOException {
 		// TODO Auto-generated method stub
+		
+		command = message;
+		
 		if (message.charAt(0) == '#') {
-	      runCommand(message);
+			runCommand(message);
 	    }
+		
+		else 
+	    	clientUI.display
+	          ("No such command!");
+		
 	}
 
 	@Override
 	protected void handleMessageFromServer(Object msg) {
-		if (msg.toString().startsWith("#")) {
-		   String[] arrOfStr = msg.toString().split(" ");
-		   this.purchaseNum = arrOfStr[1];
+		if (command.equalsIgnoreCase("#get purchase")  && !msg.toString().equalsIgnoreCase("There is no customer with that name!")) {
+			 String purchaseNum = msg.toString();
+			 purchaseNum = purchaseNum.substring(purchaseNum.lastIndexOf(' ') + 1);
+		   this.purchaseNum = purchaseNum;
 		   
-		   clientUI.display("The purchase number is " + this.purchaseNum);
+		   clientUI.display(msg.toString());
 	    }
 		else
 		   clientUI.display(msg.toString());
 		//this.purchaseNum = msg.toString();
-		
+		command = null;
 	}
 
 	private void runCommand(String message) throws IOException {
@@ -74,15 +84,21 @@ public class ClientCommand extends AbstractClient {
 	    else if (message.equalsIgnoreCase("#getport")) {
 	      clientUI.display("Current port: " + Integer.toString(getPort()));
 	    }
-	    else if (message.equalsIgnoreCase("#getpurchase")) {
-	      System.out.println("Enter the name of the Customer");
-	      BufferedReader fromConsole = 
-	    	        new BufferedReader(new InputStreamReader(System.in));
-	      String name;
-	      name = fromConsole.readLine();
-	      this.Name = name;
+	    else if (message.equalsIgnoreCase("#set username")) {
+	    	 System.out.println("Enter the user name of the Customer");
+		      BufferedReader fromConsole = 
+		    	        new BufferedReader(new InputStreamReader(System.in));
+		      String name;
+		      name = fromConsole.readLine();
+		      this.userName = name;
+		      purchaseNum = null;
+		  	  command = null;
+		  	
+		    }
+	    else if (message.equalsIgnoreCase("#get purchase") || message.equalsIgnoreCase("#get customer")) {
+	     
 	      try {
-	        sendToServer("$ " + name);
+	        sendToServer(message + " " + userName);
 	      }
 	      catch(IOException e) {
 	        clientUI.display
@@ -91,32 +107,31 @@ public class ClientCommand extends AbstractClient {
 	      }
 		}
 	    
-	    else if (message.equalsIgnoreCase("#addpurchase")) {
-	    	int result = Integer.parseInt(this.purchaseNum);
+	    else if (message.equalsIgnoreCase("#add purchase")) {
+	    	
+	    	if ( this.purchaseNum == null) {System.out.println("you have to get purchase first");}
+	    	else {
+	    		int result = Integer.parseInt(this.purchaseNum);
 	    	this.purchaseNum = Integer.toString(++result);
 	    	System.out.println
-	        ("New purchase Value is " + this.purchaseNum + " type #updatepurchase if you want to update it" );
+	        ("New purchase Value is " + this.purchaseNum + " type \"#update purchase\" if you want to update it" );
+	    	}
 	    }
-	    else if (message.equalsIgnoreCase("#updatepurchase")) {
+	    else if (message.equalsIgnoreCase("#update purchase")) {
+	    	
+	    	if ( purchaseNum == null) {System.out.println("you have to get purchase first");}
+	    	else {
 	    	try {
-	    		sendToServer("& " + this.purchaseNum + " " + this.Name);
+	    		sendToServer(message + " " + this.purchaseNum + " " + this.userName);
 	 	    }
 	 	    catch(IOException e) {
 	 	        clientUI.display
 	 	          ("Could not send message to server.  Terminating client.");
 	 	        quit();
 	 	    }
+	    	}
 	    }
-	    else if (message.equalsIgnoreCase("#getcustomer")) {
-	    	 try {
-	    		sendToServer("@ " + this.Name);
-	 	     }
-	 	     catch(IOException e) {
-	 	        clientUI.display
-	 	          ("Could not send message to server.  Terminating client.");
-	 	        quit();
-	 	     }
-	    }
+	   
 	    else 
 	    	clientUI.display
 	          ("No such command!");
