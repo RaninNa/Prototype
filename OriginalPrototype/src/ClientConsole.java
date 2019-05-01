@@ -1,6 +1,5 @@
 
 import java.io.*;
-import java.net.Socket;
 import java.net.UnknownHostException;
 
 import client.*;
@@ -16,9 +15,9 @@ public class ClientConsole implements Display {
   ClientCommand client;
 
 
-  public ClientConsole(String host,int port,String purchase) {
+  public ClientConsole(String host,int port) {
     try {
-      client= new ClientCommand(host, port, purchase, this);
+      client= new ClientCommand(host, port, this);
     } 
     catch(IOException exception) {
       System.out.println("Error: Can't setup connection!"
@@ -84,8 +83,7 @@ public class ClientConsole implements Display {
   public static void main(String[] args) throws UnknownHostException, IOException 
   {
     int port = 0;  //The port number
-    String host = "";
-    String purchase = "";
+    String host = null;
     try
     {
       host = args[0];
@@ -99,7 +97,7 @@ public class ClientConsole implements Display {
     } catch (ArrayIndexOutOfBoundsException e){
       port = DEFAULT_PORT;
     }
-    ClientConsole run = new ClientConsole(host, port, purchase);
+    ClientConsole run = new ClientConsole(host, port);
     run.accept();  //Wait for console data
     
   }

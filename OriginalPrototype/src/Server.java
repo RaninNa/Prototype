@@ -67,33 +67,51 @@ public class Server extends AbstractServer
    * @param client The connection from which the message originated.
    */
   public void handleMessageFromClient(Object msg, ConnectionToClient client) {
-	  if (msg.toString().startsWith("$")) {
-		  String[] arrOfStr = msg.toString().split(" ");
-		  int purchaseNum = getHistory(arrOfStr[1]) ;
+	  if (msg.toString().startsWith("#get purchase")){
+		 
+		  String username = msg.toString();
+			username = username.substring(username.lastIndexOf(' ') + 1);
+			
+		  int purchaseNum = getPurchaseNum(username) ;
 		  
-		  if(purchaseNum  == -1) {
-			this.sendToAllClients("There is no customer with that name!");
-		  }
-		  else
-		    this.sendToAllClients("# "+purchaseNum);
+			  try
+	        {
+			if(purchaseNum  == -1) {
+				client.sendToClient("There is no customer with that name!");
+			} else
+	          client.sendToClient("The purchase number is " + purchaseNum);
+	          
+	        }
+	        catch (IOException e) {}
 	  }
-	  else if (msg.toString().startsWith("&")) {
+	  else if (msg.toString().startsWith("#update purchase")) {
 		  // code to handle updatepurchase
 		  String[] arrOfStr = msg.toString().split(" ");
 		  
-		  int purchaseNum = Integer.parseInt(arrOfStr[1]);
-		  String name = arrOfStr[2];
-		  reNewPurchase(name, purchaseNum);
-		  this.sendToAllClients("The purchase number has been updated!");
+		  int purchaseNum = Integer.parseInt(arrOfStr[2]);
+		  String username = arrOfStr[3];
+		  int status = reNewPurchase(username, purchaseNum);
+		  try
+	        {
+			  if(status  == -1) {
+					client.sendToClient("couldn't update");}
+			  else 
+			  client.sendToClient("The purchase number has been updated!");
+	        }
+	        catch (IOException e) {}
 	  }
 	  
-	  else if (msg.toString().startsWith("@")) {
+	  else if (msg.toString().startsWith("#get customer")) {
 		  // code to handle getcustomer
 		  String[] arrOfStr = msg.toString().split(" ");
+		  String username = arrOfStr[2];
+		  String info = getCostumerInfo(username);
 		  
-		  String info = getCostumerInfo(arrOfStr[1]);
-		  
-		  this.sendToAllClients(info);
+		  try
+	        {
+				client.sendToClient(info);
+	        }
+	        catch (IOException e) {}
 	  }
     
   }
@@ -148,7 +166,7 @@ public class Server extends AbstractServer
     return null;
   }
 
-  private void reNewPurchase(String name, int purchaseNum) {
+  private int reNewPurchase(String name, int purchaseNum) {
     Connection conn = null;
 	Statement stmt = null;
 	try {
@@ -160,7 +178,8 @@ public class Server extends AbstractServer
 		PreparedStatement updatePurchase = conn.prepareStatement("update purchases set Purchase = ? where Name = ?");
 		updatePurchase.setInt(1,purchaseNum);
 	    updatePurchase.setString(2,name);
-	    updatePurchase.executeUpdate();
+	    if (updatePurchase.executeUpdate()<1)
+	    	return -1;
 	
 		stmt.close();
 		conn.close();
@@ -182,10 +201,10 @@ public class Server extends AbstractServer
 			se.printStackTrace();
 		}
 	}
-	
+	return 1;
   }
 
-  private int getHistory(String name) {
+  private int getPurchaseNum(String name) {
 	Connection conn = null;
 	Statement stmt = null;
 	try {
@@ -326,7 +345,7 @@ public class Server extends AbstractServer
     // display on server and clients that the client has connected.
     String msg = "A Client has connected";
     System.out.println(msg);
-    this.sendToAllClients(msg);
+   
   }
 
   /**
@@ -340,7 +359,7 @@ public class Server extends AbstractServer
     String msg = "Client has disconnected";
 
     System.out.println(msg);
-    this.sendToAllClients(msg);
+    
   }
 
   /**
@@ -354,7 +373,7 @@ public class Server extends AbstractServer
     String msg = "Client has disconnected";
 
     System.out.println(msg);
-    this.sendToAllClients(msg);
+    
   }
 
   /**
