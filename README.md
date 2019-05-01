@@ -7,6 +7,6 @@ in the database
 commands that are used in the client side
 - set customer username: #set username
 - in order to read the purchases number of a customer type: #get purchase
-- to add a purchase to the same customer, type: #add puchase
+- to add a purchase to the same customer, type: #add purchase
 - to update it in data base : #update purchase
 - to view customer details from database : #get customer
